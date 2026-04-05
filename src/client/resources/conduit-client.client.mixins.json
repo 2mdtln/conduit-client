@@ -3,7 +3,7 @@
 	"package": "com.twomdtln.client.mixin",
 	"compatibilityLevel": "JAVA_21",
 	"client": [
-		"ExampleClientMixin"
+		"LivingEntityFullBrightMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

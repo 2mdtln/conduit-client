@@ -26,10 +26,15 @@
 				"value": "com.twomdtln.client.ConduitClientClient",
 				"adapter": "kotlin"
 			}
+		],
+		"modmenu": [
+			{
+				"value": "com.twomdtln.client.ConduitModMenuIntegration",
+				"adapter": "kotlin"
+			}
 		]
 	},
 	"mixins": [
-		"conduit-client.mixins.json",
 		{
 			"config": "conduit-client.client.mixins.json",
 			"environment": "client"
