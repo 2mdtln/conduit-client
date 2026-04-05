@@ -14,6 +14,10 @@ object ConduitClientFeatures {
 
     fun isEspEnabled(): Boolean = ConduitConfig.espEnabled
 
+    fun isShowFpsEnabled(): Boolean = ConduitConfig.showFpsEnabled
+
+    fun isShowPingEnabled(): Boolean = ConduitConfig.showPingEnabled
+
     fun toggleFullBright(client: MinecraftClient): Boolean {
         ConduitConfig.setFullBrightEnabled(!ConduitConfig.fullBrightEnabled)
         pendingLightmapRefresh = true
@@ -24,6 +28,16 @@ object ConduitClientFeatures {
     fun toggleEsp(): Boolean {
         ConduitConfig.setEspEnabled(!ConduitConfig.espEnabled)
         return ConduitConfig.espEnabled
+    }
+
+    fun toggleShowFps(): Boolean {
+        ConduitConfig.setShowFpsEnabled(!ConduitConfig.showFpsEnabled)
+        return ConduitConfig.showFpsEnabled
+    }
+
+    fun toggleShowPing(): Boolean {
+        ConduitConfig.setShowPingEnabled(!ConduitConfig.showPingEnabled)
+        return ConduitConfig.showPingEnabled
     }
 
     fun tick(client: MinecraftClient) {

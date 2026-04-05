@@ -16,8 +16,7 @@ object ConduitConfig {
             "minecraft:ender_chest",
             "minecraft:barrel",
             "minecraft:shulker_box",
-            "minecraft:white_shulker_box",
-            "minecraft:red_bed",
+            "minecraft:bed",
             "minecraft:crafting_table",
             "minecraft:furnace",
             "minecraft:blast_furnace",
@@ -35,6 +34,12 @@ object ConduitConfig {
         private set
 
     var espEnabled: Boolean = false
+        private set
+
+    var showFpsEnabled: Boolean = false
+        private set
+
+    var showPingEnabled: Boolean = false
         private set
 
     var selectedEspProfile: String = "Base Hunting"
@@ -59,6 +64,8 @@ object ConduitConfig {
 
         fullBrightEnabled = properties.getProperty("full_bright_enabled", "false").toBoolean()
         espEnabled = properties.getProperty("esp_enabled", "false").toBoolean()
+        showFpsEnabled = properties.getProperty("show_fps_enabled", "false").toBoolean()
+        showPingEnabled = properties.getProperty("show_ping_enabled", "false").toBoolean()
 
         val configuredProfiles = properties.getProperty("esp_profiles")
             ?.split(",")
@@ -73,6 +80,7 @@ object ConduitConfig {
                     ?.split("|")
                     ?.map { it.trim() }
                     ?.filter { it.isNotEmpty() }
+                    ?.map(EspBlockCatalog::normalizeForStorage)
                     ?.distinct()
                     ?.toMutableList()
                     ?: mutableListOf()
@@ -100,12 +108,31 @@ object ConduitConfig {
         save()
     }
 
+    fun setShowFpsEnabled(enabled: Boolean) {
+        showFpsEnabled = enabled
+        save()
+    }
+
+    fun setShowPingEnabled(enabled: Boolean) {
+        showPingEnabled = enabled
+        save()
+    }
+
     fun cycleEspProfile(): String {
         val profiles = espProfiles.keys.toList()
         val currentIndex = profiles.indexOf(selectedEspProfile).coerceAtLeast(0)
         selectedEspProfile = profiles[(currentIndex + 1) % profiles.size]
         save()
         return selectedEspProfile
+    }
+
+    fun setSelectedEspProfile(profile: String) {
+        if (!espProfiles.containsKey(profile)) {
+            return
+        }
+
+        selectedEspProfile = profile
+        save()
     }
 
     fun getEspProfiles(): List<String> = espProfiles.keys.toList()
@@ -116,12 +143,13 @@ object ConduitConfig {
 
     fun addEspBlock(blockId: String, profile: String = selectedEspProfile): Boolean {
         val blocks = espProfiles.getOrPut(profile) { mutableListOf() }
+        val normalizedBlockId = EspBlockCatalog.normalizeForStorage(blockId)
 
-        if (blocks.contains(blockId)) {
+        if (blocks.contains(normalizedBlockId)) {
             return false
         }
 
-        blocks += blockId
+        blocks += normalizedBlockId
         save()
         return true
     }
@@ -142,6 +170,8 @@ object ConduitConfig {
         val properties = Properties().apply {
             setProperty("full_bright_enabled", fullBrightEnabled.toString())
             setProperty("esp_enabled", espEnabled.toString())
+            setProperty("show_fps_enabled", showFpsEnabled.toString())
+            setProperty("show_ping_enabled", showPingEnabled.toString())
             setProperty("esp_selected_profile", selectedEspProfile)
             setProperty("esp_profiles", espProfiles.keys.joinToString(","))
 

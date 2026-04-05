@@ -18,6 +18,7 @@ object ConduitClientClient : ClientModInitializer {
 	override fun onInitializeClient() {
         ConduitClientFeatures.initialize()
         ConduitEspRenderer.initialize()
+        ConduitHudRenderer.initialize()
 
 		openMenuKeyBinding = KeyBindingHelper.registerKeyBinding(
             KeyBinding(
