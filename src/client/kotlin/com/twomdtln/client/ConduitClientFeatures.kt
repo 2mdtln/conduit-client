@@ -16,7 +16,7 @@ object ConduitClientFeatures {
 
     fun isShowFpsEnabled(): Boolean = ConduitConfig.showFpsEnabled
 
-    fun isShowPingEnabled(): Boolean = ConduitConfig.showPingEnabled
+    fun isShowPingEnabled(): Boolean = false
 
     fun toggleFullBright(client: MinecraftClient): Boolean {
         ConduitConfig.setFullBrightEnabled(!ConduitConfig.fullBrightEnabled)
@@ -36,8 +36,8 @@ object ConduitClientFeatures {
     }
 
     fun toggleShowPing(): Boolean {
-        ConduitConfig.setShowPingEnabled(!ConduitConfig.showPingEnabled)
-        return ConduitConfig.showPingEnabled
+        ConduitConfig.setShowPingEnabled(false)
+        return false
     }
 
     fun tick(client: MinecraftClient) {

@@ -16,6 +16,23 @@ class ConduitToggleWidget(
     private val onToggle: () -> Unit
 ) : ClickableWidget(x, y, width, height, Text.empty()) {
     override fun renderWidget(context: DrawContext, mouseX: Int, mouseY: Int, deltaTicks: Float) {
+        if (!active) {
+            val knobSize = height - 6
+            val knobY = y + 3
+
+            context.fill(x, y, x + width, y + height, 0xFF1F1A27.toInt())
+            context.drawStrokedRectangle(x, y, width, height, 0xFF52455F.toInt())
+            context.fill(x + 3, knobY, x + 3 + knobSize, knobY + knobSize, 0xFF8A7D98.toInt())
+            context.drawCenteredTextWithShadow(
+                MinecraftClient.getInstance().textRenderer,
+                Text.literal("WIP"),
+                x + width / 2,
+                y + (height - 8) / 2 + 1,
+                0xFFD1C4DE.toInt()
+            )
+            return
+        }
+
         val enabled = stateProvider()
         val hovered = isHovered
 

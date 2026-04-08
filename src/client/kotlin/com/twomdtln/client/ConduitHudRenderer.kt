@@ -10,6 +10,8 @@ import net.minecraft.text.Text
 import net.minecraft.util.Identifier
 
 object ConduitHudRenderer {
+    private var lastKnownPingMs: Int? = null
+
     fun initialize() {
         HudElementRegistry.attachElementBefore(VanillaHudElements.CHAT, Identifier.of("conduit-client", "overlay")) { context, _ ->
             val client = MinecraftClient.getInstance()
@@ -30,7 +32,7 @@ object ConduitHudRenderer {
                 val ping = resolvePing(client)
                 context.drawTextWithShadow(
                     client.textRenderer,
-                    Text.literal("$ping ms"),
+                    Text.literal(ping?.let { "$it ms" } ?: "--"),
                     6,
                     nextHudY,
                     0xFFF5EDFF.toInt()
@@ -64,9 +66,24 @@ object ConduitHudRenderer {
         context.drawTextWithShadow(client.textRenderer, name, x + 24, y + 7, 0xFFF6EEFF.toInt())
     }
 
-    private fun resolvePing(client: MinecraftClient): Int {
-        val uuid = client.player?.uuid ?: return 0
-        return client.networkHandler?.getPlayerListEntry(uuid)?.latency ?: 0
+    private fun resolvePing(client: MinecraftClient): Int? {
+        if (client.player == null || client.networkHandler == null || client.isInSingleplayer) {
+            lastKnownPingMs = null
+            return null
+        }
+
+        val player = client.player ?: return lastKnownPingMs
+        val entry = client.networkHandler?.getPlayerListEntry(player.uuid)
+            ?: client.networkHandler?.getPlayerListEntry(player.gameProfile.name)
+
+        val ping = entry?.latency
+            ?: client.currentServerEntry?.ping?.takeIf { it >= 0L && it <= Int.MAX_VALUE.toLong() }?.toInt()
+
+        if (ping != null) {
+            lastKnownPingMs = ping
+        }
+
+        return lastKnownPingMs
     }
 
     private fun renderEspSummary(context: DrawContext, client: MinecraftClient) {

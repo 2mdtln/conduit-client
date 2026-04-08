@@ -43,9 +43,7 @@ class ConduitMenuScreen(private val parent: Screen? = null) : Screen(Text.litera
         )
 
         pingToggle = addDrawableChild(
-            ConduitToggleWidget(0, 0, 58, 18, { ConduitClientFeatures.isShowPingEnabled() }) {
-                ConduitClientFeatures.toggleShowPing()
-            }
+            ConduitToggleWidget(0, 0, 58, 18, { false }) {}
         )
 
         espProfileButton = addDrawableChild(
@@ -102,7 +100,8 @@ class ConduitMenuScreen(private val parent: Screen? = null) : Screen(Text.litera
             context,
             contentLeft,
             viewportTop - featureScroll + SQUARE_SIZE + SQUARE_GAP,
-            "Show Ping"
+            "Show Ping",
+            subtitle = "WIP"
         )
 
         context.drawTextWithShadow(
@@ -174,6 +173,7 @@ class ConduitMenuScreen(private val parent: Screen? = null) : Screen(Text.litera
         setFeatureVisibility(fullBrightToggle, espY, SQUARE_SIZE, viewportTop, viewportBottom)
         setFeatureVisibility(fpsToggle, espY, SQUARE_SIZE, viewportTop, viewportBottom)
         setFeatureVisibility(pingToggle, secondRowY, SQUARE_SIZE, viewportTop, viewportBottom)
+        pingToggle.active = false
     }
 
     private fun setFeatureVisibility(widget: net.minecraft.client.gui.widget.ClickableWidget, y: Int, height: Int, viewportTop: Int, viewportBottom: Int) {
@@ -187,7 +187,8 @@ class ConduitMenuScreen(private val parent: Screen? = null) : Screen(Text.litera
         x: Int,
         y: Int,
         title: String,
-        span: Int = 1
+        span: Int = 1,
+        subtitle: String? = null
     ) {
         val viewportTop = panelTop() + TOP_BAR_HEIGHT
         val viewportBottom = panelTop() + panelHeight() - 28
@@ -200,6 +201,9 @@ class ConduitMenuScreen(private val parent: Screen? = null) : Screen(Text.litera
         context.fill(x, y, x + width, y + SQUARE_SIZE, 0x4A26173F)
         context.drawStrokedRectangle(x, y, width, SQUARE_SIZE, 0x8A714CB8.toInt())
         context.drawTextWithShadow(textRenderer, Text.literal(title), x + 16, y + 16, 0xFFFFFFFF.toInt())
+        if (subtitle != null) {
+            context.drawTextWithShadow(textRenderer, Text.literal(subtitle), x + 16, y + 32, 0xFFB58AE9.toInt())
+        }
     }
 
     private fun renderOverlayBackground(context: DrawContext) {

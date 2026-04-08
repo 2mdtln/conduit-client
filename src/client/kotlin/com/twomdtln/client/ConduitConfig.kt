@@ -65,7 +65,7 @@ object ConduitConfig {
         fullBrightEnabled = properties.getProperty("full_bright_enabled", "false").toBoolean()
         espEnabled = properties.getProperty("esp_enabled", "false").toBoolean()
         showFpsEnabled = properties.getProperty("show_fps_enabled", "false").toBoolean()
-        showPingEnabled = properties.getProperty("show_ping_enabled", "false").toBoolean()
+        showPingEnabled = false
 
         val configuredProfiles = properties.getProperty("esp_profiles")
             ?.split(",")
@@ -114,7 +114,7 @@ object ConduitConfig {
     }
 
     fun setShowPingEnabled(enabled: Boolean) {
-        showPingEnabled = enabled
+        showPingEnabled = false
         save()
     }
 
