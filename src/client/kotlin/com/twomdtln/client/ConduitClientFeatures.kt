@@ -18,6 +18,12 @@ object ConduitClientFeatures {
 
     fun isShowPingEnabled(): Boolean = false
 
+    fun isAutoTotemEnabled(): Boolean = ConduitConfig.autoTotemEnabled
+
+    fun isAutoTotemInstantEnabled(): Boolean = ConduitConfig.autoTotemInstantEnabled
+
+    fun isFreecamEnabled(): Boolean = ConduitFreecam.isEnabled()
+
     fun toggleFullBright(client: MinecraftClient): Boolean {
         ConduitConfig.setFullBrightEnabled(!ConduitConfig.fullBrightEnabled)
         pendingLightmapRefresh = true
@@ -40,8 +46,41 @@ object ConduitClientFeatures {
         return false
     }
 
+    fun toggleAutoTotem(): Boolean {
+        ConduitConfig.setAutoTotemEnabled(!ConduitConfig.autoTotemEnabled)
+        if (!ConduitConfig.autoTotemEnabled) {
+            ConduitAutoTotem.reset()
+        }
+        return ConduitConfig.autoTotemEnabled
+    }
+
+    fun toggleAutoTotemInstant(): Boolean {
+        ConduitConfig.setAutoTotemInstantEnabled(!ConduitConfig.autoTotemInstantEnabled)
+        ConduitAutoTotem.reset()
+        return ConduitConfig.autoTotemInstantEnabled
+    }
+
+    fun toggleFreecam(client: MinecraftClient): Boolean {
+        val enabled = ConduitFreecam.toggle(client)
+        ConduitConfig.setFreecamEnabled(enabled)
+        return enabled
+    }
+
+    fun setFreecamKeyCode(keyCode: Int) {
+        ConduitConfig.setFreecamKeyCode(keyCode)
+        ConduitClientClient.updateFreecamKeyBinding(keyCode)
+    }
+
     fun tick(client: MinecraftClient) {
         refreshLightmapIfReady(client)
+        ConduitAutoTotem.tick(client)
+        if (ConduitConfig.freecamEnabled && !ConduitFreecam.isEnabled()) {
+            ConduitFreecam.enable(client)
+        }
+        if (!ConduitConfig.freecamEnabled && ConduitFreecam.isEnabled()) {
+            ConduitFreecam.disable(client)
+        }
+        ConduitFreecam.tick(client)
     }
 
     private fun refreshLightmapIfReady(client: MinecraftClient) {

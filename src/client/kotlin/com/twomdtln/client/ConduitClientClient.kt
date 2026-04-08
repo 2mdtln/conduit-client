@@ -13,6 +13,7 @@ import org.lwjgl.glfw.GLFW
 
 object ConduitClientClient : ClientModInitializer {
 	private lateinit var openMenuKeyBinding: KeyBinding
+	private lateinit var freecamKeyBinding: KeyBinding
     private val conduitCategory = Category.create(Identifier.of("conduit_client", "shortcuts"))
 
 	override fun onInitializeClient() {
@@ -29,6 +30,15 @@ object ConduitClientClient : ClientModInitializer {
             )
         )
 
+		freecamKeyBinding = KeyBindingHelper.registerKeyBinding(
+            KeyBinding(
+                "key.conduit-client.toggle_freecam",
+                InputUtil.Type.KEYSYM,
+                ConduitConfig.freecamKeyCode,
+                conduitCategory
+            )
+        )
+
         ClientTickEvents.END_CLIENT_TICK.register(ClientTickEvents.EndTick { client ->
             ConduitClientFeatures.tick(client)
             ConduitEspRenderer.tick(client)
@@ -36,8 +46,19 @@ object ConduitClientClient : ClientModInitializer {
             while (openMenuKeyBinding.wasPressed()) {
                 toggleMenu(client)
             }
+
+            while (freecamKeyBinding.wasPressed()) {
+                ConduitClientFeatures.toggleFreecam(client)
+            }
         })
 	}
+
+    fun getFreecamKeyBinding(): KeyBinding = freecamKeyBinding
+
+    fun updateFreecamKeyBinding(keyCode: Int) {
+        freecamKeyBinding.setBoundKey(InputUtil.Type.KEYSYM.createFromCode(keyCode))
+        KeyBinding.updateKeysByCode()
+    }
 
     private fun toggleMenu(client: MinecraftClient) {
         val currentScreen = client.currentScreen

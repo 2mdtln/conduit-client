@@ -1,6 +1,7 @@
 package com.twomdtln.client
 
 import net.fabricmc.loader.api.FabricLoader
+import org.lwjgl.glfw.GLFW
 import java.io.Reader
 import java.io.Writer
 import java.nio.file.Files
@@ -42,6 +43,18 @@ object ConduitConfig {
     var showPingEnabled: Boolean = false
         private set
 
+    var autoTotemEnabled: Boolean = false
+        private set
+
+    var autoTotemInstantEnabled: Boolean = false
+        private set
+
+    var freecamEnabled: Boolean = false
+        private set
+
+    var freecamKeyCode: Int = GLFW.GLFW_KEY_F6
+        private set
+
     var selectedEspProfile: String = "Base Hunting"
         private set
 
@@ -66,6 +79,11 @@ object ConduitConfig {
         espEnabled = properties.getProperty("esp_enabled", "false").toBoolean()
         showFpsEnabled = properties.getProperty("show_fps_enabled", "false").toBoolean()
         showPingEnabled = false
+        autoTotemEnabled = properties.getProperty("auto_totem_enabled", "false").toBoolean()
+        autoTotemInstantEnabled = properties.getProperty("auto_totem_instant_enabled", "false").toBoolean()
+        freecamEnabled = properties.getProperty("freecam_enabled", "false").toBoolean()
+        freecamKeyCode = properties.getProperty("freecam_key_code", GLFW.GLFW_KEY_F6.toString()).toIntOrNull()
+            ?: GLFW.GLFW_KEY_F6
 
         val configuredProfiles = properties.getProperty("esp_profiles")
             ?.split(",")
@@ -115,6 +133,26 @@ object ConduitConfig {
 
     fun setShowPingEnabled(enabled: Boolean) {
         showPingEnabled = false
+        save()
+    }
+
+    fun setAutoTotemEnabled(enabled: Boolean) {
+        autoTotemEnabled = enabled
+        save()
+    }
+
+    fun setAutoTotemInstantEnabled(enabled: Boolean) {
+        autoTotemInstantEnabled = enabled
+        save()
+    }
+
+    fun setFreecamEnabled(enabled: Boolean) {
+        freecamEnabled = enabled
+        save()
+    }
+
+    fun setFreecamKeyCode(keyCode: Int) {
+        freecamKeyCode = keyCode
         save()
     }
 
@@ -172,6 +210,10 @@ object ConduitConfig {
             setProperty("esp_enabled", espEnabled.toString())
             setProperty("show_fps_enabled", showFpsEnabled.toString())
             setProperty("show_ping_enabled", showPingEnabled.toString())
+            setProperty("auto_totem_enabled", autoTotemEnabled.toString())
+            setProperty("auto_totem_instant_enabled", autoTotemInstantEnabled.toString())
+            setProperty("freecam_enabled", freecamEnabled.toString())
+            setProperty("freecam_key_code", freecamKeyCode.toString())
             setProperty("esp_selected_profile", selectedEspProfile)
             setProperty("esp_profiles", espProfiles.keys.joinToString(","))
 

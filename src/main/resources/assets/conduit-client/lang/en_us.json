@@ -1,5 +1,6 @@
 {
   "key.categories.conduit_client.shortcuts": "Conduit Client",
   "key.category.conduit_client.shortcuts": "Conduit Client",
-  "key.conduit-client.open_menu": "Open Menu"
+  "key.conduit-client.open_menu": "Open Menu",
+  "key.conduit-client.toggle_freecam": "Toggle Freecam"
 }

@@ -1,22 +1,29 @@
 package com.twomdtln.client
 
 import com.twomdtln.client.ui.ConduitIconButton
+import com.twomdtln.client.ui.ConduitCheckboxWidget
 import com.twomdtln.client.ui.ConduitTextButton
 import com.twomdtln.client.ui.ConduitToggleWidget
 import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.client.gui.DrawContext
+import net.minecraft.client.input.KeyInput
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.text.Text
+import org.lwjgl.glfw.GLFW
 import kotlin.math.roundToInt
 
 class ConduitMenuScreen(private val parent: Screen? = null) : Screen(Text.literal("Conduit Client")) {
     private lateinit var fullBrightToggle: ConduitToggleWidget
     private lateinit var espToggle: ConduitToggleWidget
     private lateinit var fpsToggle: ConduitToggleWidget
-    private lateinit var pingToggle: ConduitToggleWidget
+    private lateinit var autoTotemToggle: ConduitToggleWidget
+    private lateinit var instantTotemToggle: ConduitCheckboxWidget
+    private lateinit var freecamToggle: ConduitToggleWidget
+    private lateinit var freecamKeyButton: ConduitTextButton
     private lateinit var espProfileButton: ConduitTextButton
     private lateinit var espSettingsButton: ConduitIconButton
     private var featureScroll = 0
+    private var awaitingFreecamKeyBind = false
 
     private val modVersion = FabricLoader.getInstance()
         .getModContainer("conduit-client")
@@ -42,8 +49,35 @@ class ConduitMenuScreen(private val parent: Screen? = null) : Screen(Text.litera
             }
         )
 
-        pingToggle = addDrawableChild(
-            ConduitToggleWidget(0, 0, 58, 18, { false }) {}
+        autoTotemToggle = addDrawableChild(
+            ConduitToggleWidget(0, 0, 58, 18, { ConduitClientFeatures.isAutoTotemEnabled() }) {
+                ConduitClientFeatures.toggleAutoTotem()
+            }
+        )
+
+        freecamToggle = addDrawableChild(
+            ConduitToggleWidget(0, 0, 58, 18, { ConduitClientFeatures.isFreecamEnabled() }) {
+                ConduitClientFeatures.toggleFreecam(client!!)
+            }
+        )
+
+        freecamKeyButton = addDrawableChild(
+            ConduitTextButton(0, 0, 46, 16, freecamKeyLabel()) {
+                awaitingFreecamKeyBind = true
+                refreshFreecamKeyText()
+            }
+        )
+
+        instantTotemToggle = addDrawableChild(
+            ConduitCheckboxWidget(
+                0,
+                0,
+                12,
+                Text.literal("Instant"),
+                { ConduitClientFeatures.isAutoTotemInstantEnabled() }
+            ) {
+                ConduitClientFeatures.toggleAutoTotemInstant()
+            }
         )
 
         espProfileButton = addDrawableChild(
@@ -100,9 +134,18 @@ class ConduitMenuScreen(private val parent: Screen? = null) : Screen(Text.litera
             context,
             contentLeft,
             viewportTop - featureScroll + SQUARE_SIZE + SQUARE_GAP,
-            "Show Ping",
-            subtitle = "WIP"
+            "Auto Totem"
         )
+        renderFeatureCard(
+            context,
+            contentLeft + SQUARE_SIZE + SQUARE_GAP,
+            viewportTop - featureScroll + SQUARE_SIZE + SQUARE_GAP,
+            "Freecam",
+        )
+
+        renderInfoBadge(context, contentLeft, viewportTop - featureScroll + SQUARE_SIZE + SQUARE_GAP)
+        renderInstantLabel(context, contentLeft, viewportTop - featureScroll + SQUARE_SIZE + SQUARE_GAP)
+        renderAutoTotemTooltip(context, mouseX, mouseY, contentLeft, viewportTop - featureScroll + SQUARE_SIZE + SQUARE_GAP)
 
         context.drawTextWithShadow(
             textRenderer,
@@ -132,7 +175,31 @@ class ConduitMenuScreen(private val parent: Screen? = null) : Screen(Text.litera
 
     override fun tick() {
         refreshEspProfileText()
+        refreshFreecamKeyText()
         updateFeatureLayout()
+    }
+
+    override fun keyPressed(input: KeyInput): Boolean {
+        if (awaitingFreecamKeyBind) {
+            when (input.key) {
+                GLFW.GLFW_KEY_ESCAPE -> {
+                    awaitingFreecamKeyBind = false
+                    refreshFreecamKeyText()
+                    return true
+                }
+
+                GLFW.GLFW_KEY_UNKNOWN -> return true
+
+                else -> {
+                    ConduitClientFeatures.setFreecamKeyCode(input.key)
+                    awaitingFreecamKeyBind = false
+                    refreshFreecamKeyText()
+                    return true
+                }
+            }
+        }
+
+        return super.keyPressed(input)
     }
 
     override fun close() {
@@ -164,16 +231,26 @@ class ConduitMenuScreen(private val parent: Screen? = null) : Screen(Text.litera
         fullBrightToggle.y = espY + SQUARE_SIZE - 25
         fpsToggle.x = showFpsX + SQUARE_SIZE - 74
         fpsToggle.y = espY + SQUARE_SIZE - 25
-        pingToggle.x = contentLeft + SQUARE_SIZE - 74
-        pingToggle.y = secondRowY + SQUARE_SIZE - 25
+        autoTotemToggle.x = contentLeft + SQUARE_SIZE - 74
+        autoTotemToggle.y = secondRowY + SQUARE_SIZE - 25
+        freecamToggle.x = contentLeft + (SQUARE_SIZE + SQUARE_GAP) + SQUARE_SIZE - 74
+        freecamToggle.y = secondRowY + SQUARE_SIZE - 25
+        instantTotemToggle.x = contentLeft + 16
+        instantTotemToggle.y = secondRowY + 44
+        freecamKeyButton.x = contentLeft + SQUARE_SIZE + SQUARE_GAP + 16
+        freecamKeyButton.y = secondRowY + 46
 
         setFeatureVisibility(espToggle, espY, SQUARE_SIZE, viewportTop, viewportBottom)
         setFeatureVisibility(espProfileButton, espY, SQUARE_SIZE, viewportTop, viewportBottom)
         setFeatureVisibility(espSettingsButton, espY, SQUARE_SIZE, viewportTop, viewportBottom)
         setFeatureVisibility(fullBrightToggle, espY, SQUARE_SIZE, viewportTop, viewportBottom)
         setFeatureVisibility(fpsToggle, espY, SQUARE_SIZE, viewportTop, viewportBottom)
-        setFeatureVisibility(pingToggle, secondRowY, SQUARE_SIZE, viewportTop, viewportBottom)
-        pingToggle.active = false
+        setFeatureVisibility(autoTotemToggle, secondRowY, SQUARE_SIZE, viewportTop, viewportBottom)
+        setFeatureVisibility(freecamToggle, secondRowY, SQUARE_SIZE, viewportTop, viewportBottom)
+        setFeatureVisibility(instantTotemToggle, secondRowY, SQUARE_SIZE, viewportTop, viewportBottom)
+        setFeatureVisibility(freecamKeyButton, secondRowY, SQUARE_SIZE, viewportTop, viewportBottom)
+        instantTotemToggle.active = instantTotemToggle.active && ConduitClientFeatures.isAutoTotemEnabled()
+        freecamKeyButton.active = freecamKeyButton.active && !awaitingFreecamKeyBind
     }
 
     private fun setFeatureVisibility(widget: net.minecraft.client.gui.widget.ClickableWidget, y: Int, height: Int, viewportTop: Int, viewportBottom: Int) {
@@ -203,6 +280,62 @@ class ConduitMenuScreen(private val parent: Screen? = null) : Screen(Text.litera
         context.drawTextWithShadow(textRenderer, Text.literal(title), x + 16, y + 16, 0xFFFFFFFF.toInt())
         if (subtitle != null) {
             context.drawTextWithShadow(textRenderer, Text.literal(subtitle), x + 16, y + 32, 0xFFB58AE9.toInt())
+        }
+    }
+
+    private fun renderInstantLabel(context: DrawContext, cardX: Int, cardY: Int) {
+        context.drawTextWithShadow(
+            textRenderer,
+            Text.literal("Instant"),
+            cardX + 34,
+            cardY + 46,
+            0xFFF1E8FF.toInt()
+        )
+    }
+
+    private fun renderInfoBadge(context: DrawContext, cardX: Int, cardY: Int) {
+        val badgeX = cardX + 68
+        val badgeY = cardY + 6
+        val badgeSize = 12
+
+        context.fill(badgeX, badgeY, badgeX + badgeSize, badgeY + badgeSize, 0xFF2E2140.toInt())
+        context.drawStrokedRectangle(badgeX, badgeY, badgeSize, badgeSize, 0xFFAF8AE4.toInt())
+        context.drawCenteredTextWithShadow(
+            textRenderer,
+            Text.literal("i"),
+            badgeX + badgeSize / 2,
+            badgeY + 2,
+            0xFFF4EAFF.toInt()
+        )
+    }
+
+    private fun renderAutoTotemTooltip(context: DrawContext, mouseX: Int, mouseY: Int, cardX: Int, cardY: Int) {
+        val badgeX = cardX + 68
+        val badgeY = cardY + 6
+        val badgeSize = 12
+        val insideBadge = mouseX in badgeX until (badgeX + badgeSize) && mouseY in badgeY until (badgeY + badgeSize)
+        if (!insideBadge) {
+            return
+        }
+
+        val tooltip = listOf(
+            Text.literal("Auto Totem"),
+            Text.literal("Instant on: refill immediately."),
+            Text.literal("Instant off: waits 1-5 seconds."),
+            Text.literal("Only refills after you close screens.")
+        )
+        context.drawTooltip(textRenderer, tooltip, mouseX, mouseY)
+    }
+
+    private fun refreshFreecamKeyText() {
+        freecamKeyButton.message = freecamKeyLabel()
+    }
+
+    private fun freecamKeyLabel(): Text {
+        return if (awaitingFreecamKeyBind) {
+            Text.literal("Press")
+        } else {
+            ConduitClientClient.getFreecamKeyBinding().boundKeyLocalizedText
         }
     }
 
